@@ -1,0 +1,43 @@
+project:
+  title: "KPLC Power Fraud Detection"
+  version: 1.0
+
+data:
+  raw: "./data/kplc.csv"
+
+target: theft_flag
+
+features:
+  - consumption_kWh
+  - temperature
+  - rainfall
+  - prev_month_consumption
+  - consumption_diff
+  - 3m_avg
+  - 6m_avg
+
+split:
+  test_size: 0.2
+  random_state: 42
+
+model1:
+  type: "XG Boost"
+  parameters:
+    objective: "binary:logistic"
+    eval_metric: "auc"
+    learning_rate: 0.05
+    n_estimators: 600
+    max_depth: 5
+    min_child_weight: 10
+    gamma: 1
+    subsample: 0.8
+    colsample_bytree: 0.7
+    reg_alpha: 0.1
+    reg_lambda: 2
+    scale_pos_weight: scale_pos_weight
+    random_state: 42
+    tree_method: "hist"
+
+output:
+  model_path: "../models/model1.kp1"
+  data_path: "./data/kplc.csv"
