@@ -34,10 +34,11 @@ model1:
     colsample_bytree: 0.7
     reg_alpha: 0.1
     reg_lambda: 2
-    scale_pos_weight: scale_pos_weight
+    scale_pos_weight: 10.0
     random_state: 42
     tree_method: "hist"
 
 output:
   model_path: "../models/model1.kp1"
   data_path: "./data/kplc.csv"
+  evaluation_report: "./reports/evaluation_report.md"
