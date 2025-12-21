@@ -88,7 +88,11 @@ def create_evaluation_report(cm, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate
 
     print(f"Report generated: {output_path}")
 
-
+def save_model(model):
+    config = load_config()
+    path = config.output.model_path
+    joblib.dump(model, path)
+    return path
 
 
     
