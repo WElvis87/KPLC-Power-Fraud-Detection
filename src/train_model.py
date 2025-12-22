@@ -8,56 +8,48 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from src.config import load_config
 
-class ModelTrainingError(Exception):
+class ErrorTrainingModel(Exception):
     pass
 
-def create_model(X_train, y_train, X_val=None, y_val=None):
+def create_model():
     config = load_config()
-    params = config.model1.parameters.copy()
-
-    # Remove parameters that XGBClassifier handles separately
-    params.pop("n_estimators", None)  # will pass directly
-    params.pop("objective", None)      # will pass explicitly
-    params.pop("eval_metric", None)    # handled in fit
+    params = config.model1.parameters
 
     model = xgb.XGBClassifier(**params)
 
-    eval_set = None
-    if X_val is not None and y_val is not None:
-        eval_set = [(X_val, y_val)]
+    return model
 
-    model.fit(
-        X_train, y_train,
-        eval_set=eval_set,
-        verbose=True
+def train_model(model, X_train, X_test, y_train, y_test):
+    model = model.fit(
+        X_train,
+        y_train,
+        eval_set=[(X_test, y_test)],
+        verbose=False
     )
 
     return model
 
-
-def evaluate_model(model, X_test, y_test, threshold=0.5):
-    y_proba = model.predict_proba(X_test)[:, 1]
-    y_pred = (y_proba >= threshold).astype(int)
+def evaluate_model(model, X_test, y_test):
+    y_pred = model.predict(X_test)
 
     cm = confusion_matrix(y_test, y_pred)
     ps = precision_score(y_test, y_pred)
     rs = recall_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
-    roc_auc = roc_auc_score(y_test, y_proba)
-    pr_auc = average_precision_score(y_test, y_proba)
+    roc_auc = roc_auc_score(y_test, y_pred)
+    pr_auc = average_precision_score(y_test, y_pred)
     report = classification_report(y_test, y_pred, output_dict=True)
     fraud_rate = np.mean(y_test)
 
     return cm, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate
 
-
 def create_evaluation_report(cm, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate, output_path=None):
     tn, fp, fn, tp = cm.ravel()
     config = load_config()
     if output_path is None:
-        output_path = config.output.evaluation_path
+        output_path = config.output.evaluation_report
 
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("# Model Performance Evaluation Report\n\n")
 
         f.write("## Confusion Matrix\n")
@@ -92,7 +84,6 @@ def save_model(model):
     config = load_config()
     path = config.output.model_path
     joblib.dump(model, path)
-    return path
+    path
 
 
-    

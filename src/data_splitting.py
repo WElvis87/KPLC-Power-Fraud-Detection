@@ -25,14 +25,8 @@ def split_data(df):
     X = df[features]
     y = df[target]
 
-    # First split: train + test
-    X_train_full, X_test, y_train_full, y_test = train_test_split(
-        X, y, test_size=config.split.test_size, random_state=config.split.random_state
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=config.split.test_size, random_state=config.split.random_state, stratify=y
     )
 
-    # Second split: train + validation (e.g., 20% of training)
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train_full, y_train_full, test_size=0.2, random_state=config.split.random_state
-    )
-
-    return X_train, X_val, X_test, y_train, y_val, y_test
+    return X_train, X_test, y_train, y_test

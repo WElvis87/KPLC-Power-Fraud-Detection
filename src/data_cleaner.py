@@ -23,17 +23,17 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.drop_duplicates()
 
-    k = 1.5
+    # k = 1.5
 
-    for col in columns:
-        Q1 = df[col].quantile(0.25)
-        Q3 = df[col].quantile(0.75)
-        IQR = Q3 - Q1
+    # for col in columns:
+    #     Q1 = df[col].quantile(0.25)
+    #     Q3 = df[col].quantile(0.75)
+    #     IQR = Q3 - Q1
 
-        lower = Q1 - k * IQR
-        upper = Q3 + k * IQR
+    #     lower = Q1 - k * IQR
+    #     upper = Q3 + k * IQR
 
-        df[col] = df[col].clip(lower, upper)
+    #     df[col] = df[col].clip(lower, upper)
 
     mapping = {"low": 0, "medium": 1, "high": 2}
     df["household_type_id"] = df["household_type"].map(mapping)

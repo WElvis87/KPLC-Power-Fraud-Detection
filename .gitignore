@@ -11,3 +11,6 @@ venv/
 # Data
 
 data/
+*.csv
+*.parquet
+*.xlsl
