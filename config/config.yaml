@@ -40,4 +40,4 @@ model1:
 output:
   model_path: "./models/model1.kp1"
   data_path: "./data/kplc.csv"
-  evaluation_report: "./data/evaluation_report.md"
+  evaluation_report: "./reports/evaluation_report.md"

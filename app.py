@@ -1,38 +1,37 @@
-import xgboost as xgb
-import numpy as np
 import joblib
-from sklearn.metrics import confusion_matrix, roc_auc_score, precision_score, recall_score, f1_score, average_precision_score, classification_report
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, classification_report, roc_auc_score, accuracy_score, average_precision_score
+import numpy as np
+from sklearn.ensemble import RandomForestRegressor
 from pathlib import Path
 import sys
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from src.config import load_config
 
+
 class ErrorTrainingModel(Exception):
     pass
 
 def create_model():
     config = load_config()
-    params = config.model1.parameters
+    params = config["model"]["parameters"]
 
-    model = xgb.XGBClassifier(**params)
-
+    if config["model"]["type"] == "random_forest":
+        model = RandomForestRegressor(**params)
+    else: 
+        raise ErrorTrainingModel("Wrong model selected")
+    
     return model
 
-def train_model(model, X_train, X_test, y_train, y_test):
-    model = model.fit(
-        X_train,
-        y_train,
-        eval_set=[(X_test, y_test)],
-        verbose=False
-    )
-
+def train_model(model, X_train, y_train):
+    model.fit(X_train, y_train)
     return model
 
 def evaluate_model(model, X_test, y_test):
     y_pred = model.predict(X_test)
 
-    cm = confusion_matrix(y_test, y_pred)
+    cm = confusion_matrix(y_test, y_pred, labels=[0, 1])
+    accuracy = accuracy_score(y_test, y_pred)
     ps = precision_score(y_test, y_pred)
     rs = recall_score(y_test, y_pred)
     f1 = f1_score(y_test, y_pred)
@@ -41,13 +40,13 @@ def evaluate_model(model, X_test, y_test):
     report = classification_report(y_test, y_pred, output_dict=True)
     fraud_rate = np.mean(y_test)
 
-    return cm, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate
+    return cm, accuracy, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate
 
-def create_evaluation_report(cm, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate, output_path=None):
+def create_evaluation_report(cm, accuracy, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate, output_path=None):
     tn, fp, fn, tp = cm.ravel()
     config = load_config()
     if output_path is None:
-        output_path = config.output.evaluation_report
+        output_path = config["output"]["evaluation_report"]
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("# Model Performance Evaluation Report\n\n")
@@ -62,6 +61,8 @@ def create_evaluation_report(cm, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate
         f.write(f"- Precision: {ps:.3f}\n")
         f.write(f"- Recall: {rs:.3f}\n")
         f.write(f"- F1-score: {f1:.3f}\n\n")
+        f.write(f"- Accuracy: {accuracy:.3f}\n")
+
 
         f.write("## Threshold-independent Metrics\n")
         f.write(f"- ROC-AUC: {roc_auc:.3f}\n")
@@ -79,11 +80,10 @@ def create_evaluation_report(cm, ps, rs, f1, roc_auc, pr_auc, report, fraud_rate
         )
 
     print(f"Report generated: {output_path}")
-
+    
 def save_model(model):
     config = load_config()
-    path = config.output.model_path
+    path = config["output"]["model_dir"]
     joblib.dump(model, path)
-    path
-
-
+    return path
+    
