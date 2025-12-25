@@ -4,4 +4,4 @@ matplotlib
 pyyaml
 pytest
 python-box
-
+scikit-learn
